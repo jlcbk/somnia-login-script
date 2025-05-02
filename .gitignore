@@ -1,0 +1,13 @@
+# 忽略包含私钥的文件
+pk.txt
+
+# 忽略 Node.js 依赖文件夹
+node_modules/
+
+# 忽略 IDE/编辑器配置文件 (可选)
+.vscode/
+.idea/
+
+# 忽略操作系统生成的文件 (可选)
+.DS_Store
+Thumbs.db
