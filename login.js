@@ -131,11 +131,94 @@ async function loginWithGetInfo() {
     }
 }
 
-// 执行登录函数
-loginWithGetInfo().then(token => {
+// 获取用户个人信息的函数
+async function getUserInfo(token) {
+    if (!token) {
+        console.error("错误：未提供有效的token，无法获取用户信息");
+        return null;
+    }
+
+    try {
+        const USER_INFO_URL = "https://quest.somnia.network/api/users/me";
+        
+        // 构建请求头，在现有基础上添加authorization
+        const headers = {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+            'Origin': 'https://quest.somnia.network',
+            'Referer': 'https://quest.somnia.network/',
+            'Authorization': token // 添加token到请求头
+        };
+
+        // 发送GET请求获取用户信息
+        const response = await axios.get(USER_INFO_URL, {
+            headers: headers,
+            httpsAgent: httpsAgent // 应用相同的httpsAgent
+        });
+
+        // 返回用户信息数据
+        return response.data;
+    } catch (error) {
+        console.error("获取用户信息时发生错误:", error.message);
+        if (axios.isAxiosError(error)) {
+            if (error.response) {
+                console.error(`服务器响应状态码: ${error.response.status}`);
+                console.error(`服务器响应数据: ${JSON.stringify(error.response.data)}`);
+            } else if (error.request) {
+                console.error("未收到服务器响应");
+            }
+        }
+        return null;
+    }
+}
+
+// 打印用户信息的函数
+function printUserInfo(userInfo) {
+    if (!userInfo) {
+        console.error("错误：无法打印用户信息，数据为空");
+        return;
+    }
+
+    console.log("
+===== 用户信息 =====");
+    
+    // 1. 检查社交媒体绑定状态
+    console.log("
+社交媒体绑定状态:");
+    console.log(`Discord: ${userInfo.discordName ? userInfo.discordName : '未绑定'}`);
+    console.log(`Twitter: ${userInfo.twitterName ? userInfo.twitterName : '未绑定'}`);
+    console.log(`Telegram: ${userInfo.telegramName ? userInfo.telegramName : '未绑定'}`);
+    
+    // 2. 检查是否被标记为bot
+    console.log("
+Bot标记状态:");
+    console.log(`账户状态: ${userInfo.isBot ? '已被标记为Bot' : '正常地址'}`);
+    
+    // 3. 打印邀请分数和人数
+    console.log("
+邀请信息:");
+    console.log(`邀请人数: ${userInfo.referralCount}`);
+    console.log(`邀请分数: ${userInfo.referralPoint}`);
+    
+    console.log("
+==================
+");
+}
+
+// 执行登录函数并获取用户信息
+loginWithGetInfo().then(async token => {
     if (token) {
         console.log("登录流程执行完毕。");
-        // 在这里可以使用获取到的 token 进行后续操作
+        
+        // 获取并打印用户信息
+        const userInfo = await getUserInfo(token);
+        if (userInfo) {
+            printUserInfo(userInfo);
+        } else {
+            console.log("获取用户信息失败。");
+        }
     } else {
         console.log("登录流程失败。");
     }
